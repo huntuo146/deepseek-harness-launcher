@@ -11,30 +11,25 @@
 
 ## 安装
 
-### 方法一：通过 git 安装（推荐）
-
-在你的 Harness profile 目录下执行 git 拉取即可：
-
-```sh
-git clone https://github.com/huntuo146/deepseek-harness-launcher.git
-```
-
-然后全局链接命令：
-
-```sh
-cd deepseek-harness-launcher
-npm install -g .
-```
-
-> 说明：`deepseek` 命令是通过 npm 全局安装的。`git clone` 拿到源码后，`npm install -g .` 会在当前机器注册 `deepseek` 命令。
-
-### 方法二：npm 全局安装
+### 方法一：npm 全局安装（一条命令，推荐）
 
 ```sh
 npm install -g deepseek-harness-launcher
 ```
 
-> 如果已发布到 npm 注册表，用这种方式最省事。
+装完即可使用，无需其他步骤。
+
+### 方法二：通过 git 安装
+
+从 GitHub 拉取源码后本地链接：
+
+```sh
+git clone https://github.com/huntuo146/deepseek-harness-launcher.git
+cd deepseek-harness-launcher
+npm install -g .
+```
+
+> 说明：两种方式效果相同——都会在当前机器注册 `deepseek` 命令。`npm install -g deepseek-harness-launcher` 最省事；git 方式适用于源码调试或网络受限环境。
 
 ## 使用
 
