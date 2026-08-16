@@ -243,6 +243,45 @@ export async function fetchLatestVersion() {
   })
 }
 
+/**
+ * Extract the installed version string from `npm ls -g` output text.
+ * Handles formats like "└── @deepseek-ai/dsh@1.2.3" and returns null when
+ * no version can be found.
+ */
+export function parseInstalledVersion(text) {
+  const m = String(text).match(/@deepseek-ai\/dsh@(\S+)/)
+  return m ? m[1].replace(/^v/, '') : null
+}
+
+/**
+ * Fetch the currently installed global version of the target package.
+ * Returns null when the package is not installed or the lookup fails.
+ */
+export async function fetchInstalledVersion() {
+  return new Promise((resolve) => {
+    const child = spawnSafe('npm', ['ls', '-g', TARGET_PACKAGE, '--depth=0'], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+    let out = ''
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL')
+      resolve(null)
+    }, CHECK_TIMEOUT_MS)
+
+    child.stdout.on('data', (chunk) => (out += chunk))
+    child.on('error', () => {
+      clearTimeout(timer)
+      resolve(null)
+    })
+    child.on('close', () => {
+      clearTimeout(timer)
+      // `npm ls` exits non-zero when the package is missing; either way we
+      // parse the version out of the output text (e.g. "└── @deepseek-ai/dsh@1.2.3").
+      resolve(parseInstalledVersion(out))
+    })
+  })
+}
+
 async function shouldCheckNow(state) {
   const last = state?.lastCheckAt
   if (!last) return true
@@ -286,14 +325,27 @@ export async function checkForUpdates({ force = false } = {}) {
   if (latest === null) {
     // Registry unreachable — remember we tried so we don't hammer it.
     await writeState({ ...state, lastCheckAt: now, latestSeen: state?.latestSeen ?? null })
+    if (force) {
+      console.log('⚠️ 检查更新失败：无法连接 npm registry，请检查网络后重试。')
+    }
     return { checked: true, latest: null, updated: false }
   }
 
   const latestSeen = state?.latestSeen ?? null
   let updated = false
-  if (latestSeen && versionGreaterThan(latest, latestSeen)) {
-    console.log(`\n🔔 检测到 DeepSeek Harness 新版本：${latestSeen} → ${latest}`)
-    if (await askYesNo('是否立即升级到最新版本？')) {
+
+  // Compare against the actually-installed version when available; otherwise
+  // fall back to the last recorded version.
+  const installed = await fetchInstalledVersion()
+  const hasUpdate = installed
+    ? versionGreaterThan(latest, installed)
+    : latestSeen && versionGreaterThan(latest, latestSeen)
+
+  if (hasUpdate) {
+    const from = installed || latestSeen || '?'
+    console.log(`\n🔔 检测到 DeepSeek Harness 更新：${from} → ${latest}`)
+    const answer = await askYesNo('是否决定更新？回复 y 自动拉取最新版本，回复 n 退出更新程序')
+    if (answer) {
       console.log(`正在升级 ${TARGET_PACKAGE}@latest ...`)
       updated = await runUpdate()
       if (updated) {
@@ -302,8 +354,10 @@ export async function checkForUpdates({ force = false } = {}) {
         console.log('⚠️ 升级失败，请手动执行：npm install -g @deepseek-ai/dsh@latest')
       }
     } else {
-      console.log('已跳过本次升级。')
+      console.log('已退出更新程序，未进行升级。')
     }
+  } else {
+    console.log('✅ 您使用的版本已是最新版本，无需更新 DeepSeek Harness。')
   }
 
   await writeState({ ...state, lastCheckAt: now, latestSeen: latest })

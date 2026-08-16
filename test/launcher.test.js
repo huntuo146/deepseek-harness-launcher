@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import net from 'node:net'
-import { versionGreaterThan, resolvePort, probePort } from '../src/launcher.js'
+import { versionGreaterThan, resolvePort, probePort, parseInstalledVersion } from '../src/launcher.js'
 
 test('versionGreaterThan compares semver-ish versions', () => {
   assert.equal(versionGreaterThan('1.0.0', '0.1.0'), true)
@@ -43,4 +43,13 @@ test('probePort detects a listening port and misses a closed one', async () => {
   const open = await probePort(port)
   assert.equal(open, true)
   await new Promise((resolve) => server.close(resolve))
+})
+
+test('parseInstalledVersion extracts version from npm ls output', () => {
+  assert.equal(parseInstalledVersion('└── @deepseek-ai/dsh@1.2.3\n'), '1.2.3')
+  assert.equal(parseInstalledVersion('└─┬ @deepseek-ai/dsh@0.1.0-rc.6\n'), '0.1.0-rc.6')
+  assert.equal(parseInstalledVersion('@deepseek-ai/dsh@v2.0.0\n'), '2.0.0')
+  // No match → null
+  assert.equal(parseInstalledVersion('npm ls output with no matches'), null)
+  assert.equal(parseInstalledVersion(''), null)
 })
