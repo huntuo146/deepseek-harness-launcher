@@ -1,6 +1,6 @@
 {
   "name": "deepseek-harness-launcher",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Friendly launcher for DeepSeek Harness (dsh): one command `deepseek` starts the Web UI, auto-detects updates, and auto-opens your default browser.",
   "type": "module",
   "bin": {
