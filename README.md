@@ -1,5 +1,10 @@
 # deepseek-harness-launcher
 
+![npm version](https://img.shields.io/npm/v/deepseek-harness-launcher)
+![npm downloads](https://img.shields.io/npm/dt/deepseek-harness-launcher)
+![license](https://img.shields.io/npm/l/deepseek-harness-launcher)
+![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
+
 为 [DeepSeek Harness (dsh)](https://github.com/deepseek-ai/deepseek-harness) 打造的一个友好启动器。
 
 原生启动命令 `npx @deepseek-ai/dsh web` 对普通用户不友好。安装本插件后，只需输入 `deepseek` 即可：
@@ -19,7 +24,17 @@ npm install -g deepseek-harness-launcher
 
 装完即可使用，无需其他步骤。
 
-### 方法二：通过 git 安装
+### 方法二：npx 免安装（临时使用）
+
+不想全局安装时，可直接用 npx 运行：
+
+```sh
+npx deepseek-harness-launcher
+```
+
+> npx 每次会临时拉取最新包，适合尝鲜；长期使用建议用方法一全局安装。
+
+### 方法三：通过 git 安装（源码调试）
 
 从 GitHub 拉取源码后本地链接：
 
@@ -29,7 +44,7 @@ cd deepseek-harness-launcher
 npm install -g .
 ```
 
-> 说明：两种方式效果相同——都会在当前机器注册 `deepseek` 命令。`npm install -g deepseek-harness-launcher` 最省事；git 方式适用于源码调试或网络受限环境。
+> 说明：三种方式都会在当前机器注册 `deepseek` 命令。方法一最省事；方法三适用于需要修改源码或网络受限环境。
 
 ## 使用
 
@@ -61,8 +76,17 @@ deepseek
 ## 开发
 
 ```sh
-npm link        # 本机注册 deepseek 命令
+npm link        # 本机注册 deepseek 命令（开发调试用）
 npm test        # 运行单元测试
+```
+
+## 发布
+
+如需发布新版到 npm：
+
+```sh
+npm version patch   # 或 minor / major，自动递增版本号
+npm publish         # 发布（需要 npm 账号 + 发布权限）
 ```
 
 ## License
