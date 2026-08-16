@@ -46,6 +46,18 @@ npm install -g .
 
 > 说明：三种方式都会在当前机器注册 `deepseek` 命令。方法一最省事；方法三适用于需要修改源码或网络受限环境。
 
+### 方法四：下载 Release 压缩包
+
+从 GitHub [Releases 页面](https://github.com/huntuo146/deepseek-harness-launcher/releases) 下载最新的 `deepseek-harness-launcher-vX.Y.Z.zip` 压缩包：
+
+```sh
+# 解压后进入目录
+cd deepseek-harness-launcher-v1.0.0
+npm install -g .
+```
+
+> 压缩包含完整源码与配置，解压后同样通过 `npm install -g .` 注册 `deepseek` 命令。适合不方便使用 git 或 npm registry 的环境。
+
 ## 使用
 
 在任意终端直接输入：
@@ -88,6 +100,13 @@ npm test        # 运行单元测试
 npm version patch   # 或 minor / major，自动递增版本号
 npm publish         # 发布（需要 npm 账号 + 发布权限）
 ```
+
+同步发布 GitHub Release 压缩包（供不便使用 npm 的用户下载）：
+
+1. 打包：将 `bin/`、`src/`、`test/`、`package.json`、`README.md`、`LICENSE` 压缩为 `deepseek-harness-launcher-v<版本>.zip`
+2. 在 GitHub 创建 tag `v<版本>` 和 Release，上传该压缩包
+
+最新 Release 见：[Releases](https://github.com/huntuo146/deepseek-harness-launcher/releases)
 
 ## License
 
