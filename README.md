@@ -103,7 +103,7 @@ npm publish         # 发布（需要 npm 账号 + 发布权限）
 
 同步发布 GitHub Release 压缩包（供不便使用 npm 的用户下载）：
 
-1. 打包：将 `bin/`、`src/`、`test/`、`package.json`、`README.md`、`LICENSE` 压缩为 `deepseek-harness-launcher-v<版本>.zip`
+1. 打包：将 `bin/`、`src/`、`test/`、`package.json`、`README.md`、`LICENSE` 压缩为 `deepseek-harness-launcher.zip`
 2. 在 GitHub 创建 tag `v<版本>` 和 Release，上传该压缩包
 
 最新 Release 见：[Releases](https://github.com/huntuo146/deepseek-harness-launcher/releases)
