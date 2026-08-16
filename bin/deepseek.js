@@ -25,6 +25,7 @@ deepseek — DeepSeek Harness 启动器
   每次启动会自动检测 @deepseek-ai/dsh 的更新；发现新版本时会询问是否升级。
   添加参数 deepseek --no-update 可跳过本次检测。
   Web UI 就绪后会自动打开默认浏览器；添加 --no-browser 可禁用。
+  若目标端口已有服务在运行，将直接复用并打开浏览器，不会重复启动。
 `
 
 function parseArgs(argv) {
@@ -59,7 +60,14 @@ async function main() {
   }
 
   // Boot the Web UI, forwarding all non-flag args to `dsh web`.
-  const child = bootWeb(passthrough, { autoOpenBrowser: !noBrowser })
+  const { alreadyRunning, child } = await bootWeb(passthrough, {
+    autoOpenBrowser: !noBrowser,
+  })
+
+  // If a server was already running, we reused it — nothing to wait on.
+  if (alreadyRunning) {
+    process.exit(0)
+  }
 
   const code = await new Promise((resolve) => {
     child.on('close', resolve)

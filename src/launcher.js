@@ -148,7 +148,7 @@ export async function openBrowser(url) {
  * Probe whether a TCP port is accepting connections by attempting a raw
  * connection and immediately closing it. Returns true when reachable.
  */
-function probePort(port, host = '127.0.0.1') {
+export function probePort(port, host = '127.0.0.1') {
   return new Promise((resolve) => {
     const socket = net.connect({ host, port })
     const done = (ok) => {
@@ -314,12 +314,32 @@ export async function checkForUpdates({ force = false } = {}) {
  * Boot the DeepSeek Harness Web UI. All extra arguments are passed through to
  * the underlying `dsh web` command verbatim.
  *
+ * Before starting a new server, the target port (from `--port`, default 3080)
+ * is probed. If a live server is already listening there, the launcher does NOT
+ * spawn a duplicate (which would crash with EADDRINUSE); instead it reuses the
+ * running instance and returns `{ alreadyRunning: true, child: null, port }`.
+ *
  * When `autoOpenBrowser` is true, once the HTTP port starts listening the
- * user's default browser is opened to the Web UI automatically. The port is
- * derived from `--port` in the args (default 3080). The browser is only opened
- * if the dsh child is still running — a crash before readiness opens nothing.
+ * user's default browser is opened to the Web UI automatically.
+ *
+ * @returns {Promise<{alreadyRunning: boolean, child: import('node:child_process').ChildProcess|null, port: number}>}
  */
-export function bootWeb(extraArgs, { stdio = 'inherit', autoOpenBrowser = true } = {}) {
+export async function bootWeb(extraArgs, { stdio = 'inherit', autoOpenBrowser = true } = {}) {
+  const port = resolvePort(extraArgs)
+  const url = `http://127.0.0.1:${port}`
+
+  // Pre-detect an already-running server so we don't crash a fresh instance
+  // with EADDRINUSE.
+  if (await probePort(port)) {
+    console.log(`✅ DeepSeek Harness 已在运行 (${url})`)
+    if (autoOpenBrowser) {
+      await openBrowser(url)
+    } else {
+      console.log(`  直接访问 ${url} 即可。`)
+    }
+    return { alreadyRunning: true, child: null, port }
+  }
+
   const child = spawnSafe('npx', ['--yes', TARGET_PACKAGE, 'web', ...extraArgs], {
     stdio,
   })
@@ -353,8 +373,6 @@ export function bootWeb(extraArgs, { stdio = 'inherit', autoOpenBrowser = true }
 
   // Open the default browser as soon as the server is reachable.
   if (autoOpenBrowser) {
-    const port = resolvePort(extraArgs)
-    const url = `http://127.0.0.1:${port}`
     // Fire-and-forget: never block or crash on the browser step.
     void (async () => {
       console.log(`⏳ 等待 Web UI 就绪 (${url}) ...`)
@@ -371,7 +389,7 @@ export function bootWeb(extraArgs, { stdio = 'inherit', autoOpenBrowser = true }
     })()
   }
 
-  return child
+  return { alreadyRunning: false, child, port }
 }
 
 export const DEFAULT_BIN_PATH = join(__dirname, '..', 'bin', 'deepseek.js')

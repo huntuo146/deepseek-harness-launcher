@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { versionGreaterThan, resolvePort } from '../src/launcher.js'
+import net from 'node:net'
+import { versionGreaterThan, resolvePort, probePort } from '../src/launcher.js'
 
 test('versionGreaterThan compares semver-ish versions', () => {
   assert.equal(versionGreaterThan('1.0.0', '0.1.0'), true)
@@ -28,4 +29,18 @@ test('resolvePort parses --port and defaults to 3080', () => {
   assert.equal(resolvePort(['--port', '70000']), 3080)
   // --port without a following value falls back to default.
   assert.equal(resolvePort(['--port']), 3080)
+})
+
+test('probePort detects a listening port and misses a closed one', async () => {
+  // Probe a definitely-closed port.
+  const closed = await probePort(1) // port 1 is almost always closed
+  assert.equal(closed, false)
+
+  // Start a real server, then probe it — should be reachable.
+  const server = net.createServer()
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
+  const port = server.address().port
+  const open = await probePort(port)
+  assert.equal(open, true)
+  await new Promise((resolve) => server.close(resolve))
 })
