@@ -5,7 +5,7 @@
  * Usage:
  *   deepseek                    start the Web UI (alias: deepseek web)
  *   deepseek web [args...]      start the Web UI with app args
- *   deepseek --check-update     force an update check
+ *   deepseek --check-update     force an update check and exit (no boot)
  *   deepseek --help             show this help
  */
 
@@ -18,7 +18,7 @@ deepseek — DeepSeek Harness 启动器
   deepseek                   启动 Web UI 并自动打开默认浏览器 (默认)
   deepseek [args...]         启动 Web UI 并透传参数 (如 --port 8080)
   deepseek --no-browser      启动后不自动打开浏览器
-  deepseek --check-update    强制检查更新
+  deepseek --check-update    仅强制检查更新后退出（不会启动 Web UI）
   deepseek -h, --help        显示本帮助
 
 说明:
@@ -26,6 +26,7 @@ deepseek — DeepSeek Harness 启动器
   添加参数 deepseek --no-update 可跳过本次检测。
   Web UI 就绪后会自动打开默认浏览器；添加 --no-browser 可禁用。
   若目标端口已有服务在运行，将直接复用并打开浏览器，不会重复启动。
+  deepseek --check-update 只检查更新，检查完立即退出，不启动 Web UI。
 `
 
 function parseArgs(argv) {
@@ -57,6 +58,12 @@ async function main() {
   // Update detection (skipped if user passed --no-update).
   if (!skipUpdate) {
     await checkForUpdates({ force: checkUpdate })
+  }
+
+  // --check-update only performs the update check and exits — it must not
+  // boot the harness (which would otherwise happen below).
+  if (checkUpdate) {
+    process.exit(0)
   }
 
   // Boot the Web UI, forwarding all non-flag args to `dsh web`.
